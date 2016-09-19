@@ -1,13 +1,7 @@
 class cgroups( $cgroups_set = {} ) {
 
-	case $::osfamily{
-		'redhat': {
-     		$cgroups_set.each() |service, settings| do
-				create_resources('cgroups', service, settings)
-			end
-   		}
-   		default: {
-   			fail("Unsupported platform")
-   		}
+	case $::osfamily {
+		'redhat': 	{ create_resources('cgroups', $cgroups_set) }
+   		default: 	{ fail('Unsupported OS') }
 	}
 }

@@ -2,7 +2,7 @@ Puppet::Type.type(:cgroups).provide(:cgroups_provider) do
     desc 'cgroups provider for properties setting'
 
     def self.set_properties
-        property_hash[:properties].each |property| do
+        property_hash[:properties].each do |property|
             set_property(property)
         end
     end
