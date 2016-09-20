@@ -12,7 +12,7 @@ describe 'cgroups', :type => :class do
 
         let (:params) do 
             { :cgroups_set => {  
-                                'Apache' => { 'properties' => [ "CPUShares=600", "MemoryLimit=500M" ] } 
+                                'Apache' => { "CPUShares" => 600, "MemoryLimit"=>"500M"  } 
                              } }
         end
 
@@ -20,7 +20,8 @@ describe 'cgroups', :type => :class do
         
         it { should contain_class('cgroups').with(:cgroups_set => params[:cgroups_set] )    }
     
-        it{ should contain_cgroups('Apache').with({ 'properties' => [ "CPUShares=600", "MemoryLimit=500M" ] } ) }
+        it{ should contain_exec('/usr/bin/systemctl set-property Apache.service CPUShares=600') }
+        it{ should contain_exec('/usr/bin/systemctl set-property Apache.service MemoryLimit=500M') }
     end
 
 end
