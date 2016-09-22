@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'puppet/type/cgroups.rb'
+#require 'puppet//cgroups.rb'
 
 describe 'cgroups', :type => :class do
     
