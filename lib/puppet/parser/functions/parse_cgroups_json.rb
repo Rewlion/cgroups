@@ -1,146 +1,114 @@
 require 'json'
 
+# validates input values for service's properties
+class Validator
+  @nop = ->() {}
 
+  @bool_validator = lambda do |str|
+    str.to_s == 'true' || str.to_s == 'false'
+  end
 
+  @shares_value_validator = lambda do |value|
+    valid_syntax = value.to_s =~ /^[0-9]+$/
 
-def isStrBool?(str)
-  str.to_s == "true" or str.to_s == "false"
-end
-
-
-
-def isValidSharesValue?(value)
-  if value.to_s =~ /^[0-9]+$/
-    return (2..262144) === value.to_s.to_i
-  else
+    return (2..262_144).cover?(value.to_s.to_i) if valid_syntax
     false
   end
-end
 
+  @cpuquota_value_validator = lambda do |value|
+    value.to_s =~ /^[0-9]+%$/
+  end
 
+  @memory_value_validator = lambda do |value|
+    value.to_s =~ /^[0-9]+[K|M|G|T]?$/
+  end
 
-def isValidCPUQuotaValue?(value)
-   value.to_s =~ /^[0-9]+%$/
-end
+  @taskmax_value_validator = lambda do |value|
+    value.to_s =~ /^[0-9]+$/
+  end
 
+  @blockweight_value_validator = lambda do |value|
+    valid_syntax = value =~ %r{^/dev/.+\s+[0-9]+$}
 
+    return (1..1000).cover?(value.split[1].to_i) if valid_syntax
+    false
+  end
 
-def isValidMemoryValue?(value)
-   value.to_s =~ /^[0-9]+[K|M|G|T]?$/
-end
+  @devicebites_value_validator = lambda do |value|
+    value =~ %r{^/dev/.+\s+[0-9]+[K|M|G|T]?$}
+  end
 
+  @deviceallow_value_validator = lambda do |value|
+    value =~ %r{^/dev/.+\s+[r|w|x]?$}
+  end
 
+  @devicepolicy_value_validator = lambda do |value|
+    value.to_s =~ /strict|auto|closed/
+  end
 
+  @validators_by_property_hash = {
+    'CPUAccounting' =>         @bool_validator,
+    'MemoryAccounting' =>      @bool_validator,
+    'TasksAccounting' =>       @bool_validator,
+    'BlockIOAccounting' =>     @bool_validator,
+    'CPUShares' =>             @shares_value_validator,
+    'StartupCPUShares' =>      @shares_value_validator,
+    'CPUQuota' =>              @cpuquota_value_validator,
+    'MemoryLimit' =>           @memory_value_validator,
+    'TasksMax' =>              @taskmax_value_validator,
+    'BlockIODeviceWeight' =>   @blockweight_value_validator,
+    'BlockIOReadBandwidth' =>  @devicebites_value_validator,
+    'BlockIOWriteBandwidth' => @devicebites_value_validator,
+    'DeviceAllow' =>           @deviceallow_value_validator,
+    'DevicePolicy' =>          @devicepolicy_value_validator,
+    'Slice' =>                 @nop,
+    'Delegate' =>              @nop
+  }
 
-def isValidTaskMaxValue?(value)
-   value.to_s =~ /^[0-9]+$/
-end
+  def self.validate_option(service, property, value)
+    err_by_value = "#{service}::#{property}::#{value} is not valid"
+    err_by_unknown = "#{service}::#{property} is not supported"
 
-
-
-
-def isValidBlockIODeviceWeightValue?(value)
-  if value =~ /^\/dev\/.+\s+[0-9]+$/
-    return (1..1000) === value.split[1].to_i
-  else
-    return false
+    validator = @validators_by_property_hash[property]
+    raise(err_by_unknown) if validator.is_a?(NilClass)
+    raise(err_by_value) unless validator.call(value)
   end
 end
 
-
-
-def isDeviceBytesValue?(value)
-  value =~ /^\/dev\/.+\s+[0-9]+[K|M|G|T]?$/
-end
-
-
-
-def isValidDeviceAllowValue?(value)
-  value =~ /^\/dev\/.+\s+[r|w|x]?$/
-end
-
-
-def isValidDevicePolicyValue?(value)
-  value.to_s =~ /strict|auto|closed/
-end
-
-
-def validateOption( service, property, value ) 
-  #raise ("#{service}::#{property}::#{value} is not a string type") unless value.is_a?(String)
-
-  case property
-    when "CPUAccounting", "MemoryAccounting", "TasksAccounting", "BlockIOAccounting"
-      raise ("#{service}::#{property}::#{value} is not valid") unless isStrBool? value
-    
-    when "CPUShares", "StartupCPUShares"
-      raise ("#{service}::#{property}::#{value} is not valid ") unless isValidSharesValue? value 
-
-    when "CPUQuota"
-      raise ("#{service}::#{property}::#{value} is not valid") unless isValidCPUQuotaValue? value 
-    
-    when "MemoryLimit"
-      raise ("#{service}::#{property}::#{value} is not valid") unless isValidMemoryValue? value
-   
-    when "TasksMax"
-      raise ("#{service}::#{property}::#{value} is not valid") unless isValidTaskMaxValue? value
-    
-    when "BlockIODeviceWeight" 
-      raise ("#{service}::#{property}::#{value} is not valid") unless isValidBlockIODeviceWeightValue? value
-    
-    when "BlockIOReadBandwidth", "BlockIOWriteBandwidth" 
-      raise ("#{service}::#{property}::#{value} is not valid") unless isDeviceBytesValue? value 
-    
-    when "DeviceAllow"
-      raise ("#{service}::#{property}::#{value} is not valid") unless isValidDeviceAllowValue? value 
-    
-    when "DevicePolicy"
-      raise ("#{service}::#{property}::#{value} is not valid") unless isValidDevicePolicyValue? value
-    
-    when "Slice" , "Delegate"
-    
-    else
-      raise("#{service}::#{property} is not supported")
-    end
-end
-
-
-
-
 def parse_properties(service, json)
-	options = JSON.parse(json) rescue raise("#{service} JSON parsing  error for : #{json}")
+  options = JSON.parse(json) rescue raise("#{service}::#{json} invalid json")
 
-	unless options.is_a?(Hash)
-		raise(Puppet::ParseError ,"#{service}::#{options} is not a hash")
-	end
+  unless options.is_a?(Hash)
+    raise(Puppet::ParseError, "#{service}::#{options} is not a hash")
+  end
 
-	options.each do |property, value|
-	 validateOption(service, property, value)
-	end
+  v = Validator
 
-	options
+  options.each do |property, value|
+    v.validate_option(service, property, value)
+  end
+
+  options
 end
 
-
-
-
-Puppet::Parser::Functions::newfunction(:parse_cgroups_json, :type => :rvalue,  :doc => <<-EOS
-    This functions parses an input hash with metadata and cgroups settings(*) 
+parse_cgroups_json_description = <<-EOS
+    This functions parses an input hash with metadata and cgroups settings(*)
     into a valid hash for cgroups's argument
     (*)cgroups settings have to be in JSON format
 
     Example: parse_cgroups_json(hiera('cgroups'))
-    
+
     Following input:
     {
-       "metadata" 	=> { ... },
+       "metadata"   => { ... },
        "cinder-api" =>  '{BlockIOWeight:500, MemoryLimit:"1G"}',
-       "apache" 	=> 	'{CPUShares:1200}' 
+       "apache"   =>  '{CPUShares:1200}'
     }
-    
+
     Returns Hash:
       {"cinder-api" => { "BlockIOWeight" => 500, MemoryLimit => "1G" },
-       "apache" 	=> { "CPUShares" => 1200 } }
-    
+       "apache"   => { "CPUShares" => 1200 } }
+
     Pattern for value field:
       {
         service1 => {
@@ -152,17 +120,23 @@ Puppet::Parser::Functions::newfunction(:parse_cgroups_json, :type => :rvalue,  :
           property4 => value4
         }
       }
-    EOS
+EOS
+
+Puppet::Parser::Functions.newfunction(
+  :parse_cgroups_json,
+  type: :rvalue,
+  doc: parse_cgroups_json_description
 ) do |argv|
-    	unless argv[0].is_a?(Hash)
-    		raise(Puppet::ParseError, "parse_cgroups_json::argument:Argument have to be a Hash type")
-    	end
 
-    	settings = argv[0].tap { |el| el.delete('metadata') }
+  unless argv[0].is_a?(Hash)
+    raise(Puppet::ParseError, 'parse_cgroups_json::argument isn`t a Hash type')
+  end
 
-    	settings.each do |service,properties|
-    		settings[service] = parse_properties(service, properties)
-    	end 
+  settings = argv[0].tap { |el| el.delete('metadata') }
 
-    	return settings
+  settings.each do |service, properties|
+    settings[service] = parse_properties(service, properties)
+  end
+
+  return settings
 end

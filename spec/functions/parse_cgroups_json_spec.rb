@@ -3,43 +3,43 @@ require 'spec_helper'
 
 describe 'parse_cgroups_json' do 
 
-	context "wrong JSON format" do
+  context "wrong JSON format" do
 
-    	let(:params) {
-      	{
-        	"apache" => '{{"CPUShares":1200}'
-      	}}
+      let(:params) {
+        {
+          "apache" => '{{"CPUShares":1200}'
+        }}
 
-    	it 'should raise if settings have wrong JSON format' do
-      		is_expected.to run.with_params(params).and_raise_error(RuntimeError)
-		end
-	end
+      it 'should raise if settings have wrong JSON format' do
+          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    end
+  end
 
-	context "should not parse a data with type different from Hash" do
+  context "should not parse a data with type different from Hash" do
 
-    	let(:params) {
-        	'cinder-api:{"TasksMax":500, "MemoryLimit":"1G"}'
-    	}
+      let(:params) {
+          'cinder-api:{"TasksMax":500, "MemoryLimit":"1G"}'
+      }
 
-    	it 'should raise if group option is not a Hash' do
-      		is_expected.to run.with_params(params).and_raise_error(RuntimeError)
-		end
-	end
+      it 'should raise if group option is not a Hash' do
+          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    end
+  end
 
-	context "should not parse a data with property value's type different from string,int" do
+  context "should not parse a data with property value's type different from string,int" do
 
-    	let(:params) {
-      	{
-        	"cinder-api" => '{"TasksMax":[500,1]}'
-      	}
-    	}
+      let(:params) {
+        {
+          "cinder-api" => '{"TasksMax":[500,1]}'
+        }
+      }
 
-    	it 'should raise if property value is an array' do
-      		is_expected.to run.with_params(params).and_raise_error(RuntimeError)
-		end
-	end
+      it 'should raise if property value is an array' do
+          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    end
+  end
 
-	###########################
+  ###########################
   context 'CPUAccounting with bool value' do 
     let(:params) {
         {
