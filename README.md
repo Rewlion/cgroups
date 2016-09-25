@@ -2,6 +2,7 @@
 
 
 This puppet module configures Control Groups on the nodes which uses Systemd. Under the hood is systemctl usage.
+#### Currently only a Red Hat based OS are supported  
 
 
 
