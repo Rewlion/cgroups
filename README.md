@@ -8,9 +8,6 @@ This puppet module configures Control Groups on the nodes which uses Systemd. Un
 
 ## Initialization
 
-Place this module at /etc/puppet/modules/cgroups or in the directory where
-your puppet modules are stored.
-
 The 'cgroups' class has the following parameters and default values:
 ```puppet
 class { 'cgroups':
@@ -56,7 +53,10 @@ This puppet module relies on fuel cluster's settings. Puppet function parse_cgro
 ```
 
 For activating cgroup user should add 'cgroup' section into cluster's settings
-file via CLI. Value have to be a JSON type.
+file via CLI. 
+```diff 
+-Value have to be a JSON type.
+```
 ##### Example:
 ```
   cgroups:
