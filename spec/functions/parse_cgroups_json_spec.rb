@@ -1,438 +1,410 @@
 require 'spec_helper'
 
+describe 'parse_cgroups_json' do
+  context 'wrong JSON format' do
+    let(:params) do
+      {
+        'apache' => '{{"CPUShares":1200}'
+      }
+    end
 
-describe 'parse_cgroups_json' do 
-
-  context "wrong JSON format" do
-
-      let(:params) {
-        {
-          "apache" => '{{"CPUShares":1200}'
-        }}
-
-      it 'should raise if settings have wrong JSON format' do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it 'should raise if settings have wrong JSON format' do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
   end
 
-  context "should not parse a data with type different from Hash" do
+  context 'should not parse a data with type different from Hash' do
+    let(:params) do
+      'cinder-api:{"TasksMax":500, "MemoryLimit":"1G"}'
+    end
 
-      let(:params) {
-          'cinder-api:{"TasksMax":500, "MemoryLimit":"1G"}'
-      }
-
-      it 'should raise if group option is not a Hash' do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it 'should raise if group option is not a Hash' do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
   end
 
   context "should not parse a data with property value's type different from string,int" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"TasksMax":[500,1]}'
-        }
+    let(:params) do
+      {
+        'cinder-api' => '{"TasksMax":[500,1]}'
       }
+    end
 
-      it 'should raise if property value is an array' do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it 'should raise if property value is an array' do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
   end
 
   ###########################
-  context 'CPUAccounting with bool value' do 
-    let(:params) {
-        {
-          'metadata' => {
-            'always_editable' => true,
-            'group' => 'general',
-            'label' => 'Cgroups',
-            'weight' => 50
-          },
-          "cinder-api"  =>  '{"CPUAccounting" : "true"}'
-        } }
-
-        let(:result) {
-        {
-          "cinder-api"  => { "CPUAccounting" => "true" },
-        }}
-    
-
-        it 'should parse valid hash' do
-          is_expected.to run.with_params(params).and_return(result)
-    end
-  end
-
-
-  context "CPUAccounting with int value" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"CPUAccounting":"200"}'
-        }
+  context 'CPUAccounting with bool value' do
+    let(:params) do
+      {
+        'metadata' => {
+          'always_editable' => true,
+          'group' => 'general',
+          'label' => 'Cgroups',
+          'weight' => 50
+        },
+        'cinder-api' => '{"CPUAccounting" : "true"}'
       }
-
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
-  end
 
-
-  context 'CPUShares with valid value' do 
-    let(:params) {
-        {
-          'metadata' => {
-            'always_editable' => true,
-            'group' => 'general',
-            'label' => 'Cgroups',
-            'weight' => 50
-          },
-          "cinder-api"  =>  '{"CPUShares" : "300"}'
-        } }
-
-        let(:result) {
-        {
-          "cinder-api"  => { "CPUShares" => "300" },
-        }}
-    
-
-        it 'should parse valid hash' do
-          is_expected.to run.with_params(params).and_return(result)
-    end
-  end
-
-
-context "CPUShares with invalid value" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"CPUShares":"FOO"}'
-        }
+    let(:result) do
+      {
+        'cinder-api' => { 'CPUAccounting' => 'true' }
       }
+    end
 
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it 'should parse valid hash' do
+      is_expected.to run.with_params(params).and_return(result)
     end
   end
 
-  context "CPUShares with invalid value(lover min)" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"CPUShares":"1"}'
-        }
+  context 'CPUAccounting with int value' do
+    let(:params) do
+      {
+        'cinder-api' => '{"CPUAccounting":"200"}'
       }
+    end
 
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
   end
 
-
-  context "CPUShares with invalid value(bigger max)" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"CPUShares":"300000"}'
-        }
+  context 'CPUShares with valid value' do
+    let(:params) do
+      {
+        'metadata' => {
+          'always_editable' => true,
+          'group' => 'general',
+          'label' => 'Cgroups',
+          'weight' => 50
+        },
+        'cinder-api' => '{"CPUShares" : "300"}'
       }
-
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
-  end
 
-
-    context 'CPUQuota with valid value' do 
-    let(:params) {
-        {
-          'metadata' => {
-            'always_editable' => true,
-            'group' => 'general',
-            'label' => 'Cgroups',
-            'weight' => 50
-          },
-          "cinder-api"  =>  '{"CPUQuota" : "50%"}'
-        } }
-
-        let(:result) {
-        {
-          "cinder-api"  => { "CPUQuota" => "50%" },
-        }}
-    
-
-        it 'should parse valid hash' do
-          is_expected.to run.with_params(params).and_return(result)
-    end
-  end
-
-
-    context 'CPUQuota with valid value' do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"CPUQuota":"200"}'
-        }
+    let(:result) do
+      {
+        'cinder-api' => { 'CPUShares' => '300' }
       }
+    end
 
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it 'should parse valid hash' do
+      is_expected.to run.with_params(params).and_return(result)
     end
   end
 
-
-    context 'MemoryLimit with valid value' do 
-    let(:params) {
-        {
-          'metadata' => {
-            'always_editable' => true,
-            'group' => 'general',
-            'label' => 'Cgroups',
-            'weight' => 50
-          },
-          "cinder-api"  =>  '{"MemoryLimit" : "1024M"}'
-        } }
-
-        let(:result) {
-        {
-          "cinder-api"  => { "MemoryLimit" => "1024M" },
-        }}
-    
-
-        it 'should parse valid hash' do
-          is_expected.to run.with_params(params).and_return(result)
-    end
-  end
-
-
-context "MemoryLimit with invalid value" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"MemoryLimit":"200FOO"}'
-        }
+  context 'CPUShares with invalid value' do
+    let(:params) do
+      {
+        'cinder-api' => '{"CPUShares":"FOO"}'
       }
+    end
 
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
   end
 
-
-    context 'TasksMax with valid value' do 
-    let(:params) {
-        {
-          'metadata' => {
-            'always_editable' => true,
-            'group' => 'general',
-            'label' => 'Cgroups',
-            'weight' => 50
-          },
-          "cinder-api"  =>  '{"TasksMax" : "22"}'
-        } }
-
-        let(:result) {
-        {
-          "cinder-api"  => { "TasksMax" => "22" },
-        }}
-    
-
-        it 'should parse valid hash' do
-          is_expected.to run.with_params(params).and_return(result)
-    end
-  end
-
-
-context "TasksMax with invalid value" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"TasksMax":"FOO"}'
-        }
+  context 'CPUShares with invalid value(lover min)' do
+    let(:params) do
+      {
+        'cinder-api' => '{"CPUShares":"1"}'
       }
+    end
 
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
   end
 
-
-    context 'BlockIODeviceWeight with valid value' do 
-    let(:params) {
-        {
-          'metadata' => {
-            'always_editable' => true,
-            'group' => 'general',
-            'label' => 'Cgroups',
-            'weight' => 50
-          },
-          "cinder-api"  =>  '{"BlockIODeviceWeight" : "/dev/sda1 10"}'
-        } }
-
-        let(:result) {
-        {
-          "cinder-api"  => { "BlockIODeviceWeight" => "/dev/sda1 10" },
-        }}
-    
-
-        it 'should parse valid hash' do
-          is_expected.to run.with_params(params).and_return(result)
-    end
-  end
-
-
-context "BlockIODeviceWeight with invalid value by syntax" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"BlockIODeviceWeight":"foo"}'
-        }
+  context 'CPUShares with invalid value(bigger max)' do
+    let(:params) do
+      {
+        'cinder-api' => '{"CPUShares":"300000"}'
       }
+    end
 
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
   end
 
-context "BlockIODeviceWeight with invalid value( > 1k )" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"BlockIODeviceWeight":"1000000"}'
-        }
+  context 'CPUQuota with valid value' do
+    let(:params) do
+      {
+        'metadata' => {
+          'always_editable' => true,
+          'group' => 'general',
+          'label' => 'Cgroups',
+          'weight' => 50
+        },
+        'cinder-api' => '{"CPUQuota" : "50%"}'
       }
-
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
-  end
 
-context "BlockIODeviceWeight with invalid value( < 10 )" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"BlockIODeviceWeight":"0"}'
-        }
+    let(:result) do
+      {
+        'cinder-api' => { 'CPUQuota' => '50%' }
       }
+    end
 
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it 'should parse valid hash' do
+      is_expected.to run.with_params(params).and_return(result)
     end
   end
 
-
-context 'BlockIOReadBandwidth with valid value' do 
-    let(:params) {
-        {
-          'metadata' => {
-            'always_editable' => true,
-            'group' => 'general',
-            'label' => 'Cgroups',
-            'weight' => 50
-          },
-          "cinder-api"  =>  '{"BlockIOReadBandwidth" : "/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0 5M"}'
-        } }
-
-        let(:result) {
-        {
-          "cinder-api"  => { "BlockIOReadBandwidth" => "/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0 5M" },
-        }}
-    
-
-        it 'should parse valid hash' do
-          is_expected.to run.with_params(params).and_return(result)
-    end
-  end
-
-
-context "BlockIOReadBandwidth with invalid value" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"CPUAccounting":"foo"}'
-        }
+  context 'CPUQuota with valid value' do
+    let(:params) do
+      {
+        'cinder-api' => '{"CPUQuota":"200"}'
       }
+    end
 
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
   end
 
-
-context 'DeviceAllow with valid value' do 
-    let(:params) {
-        {
-          'metadata' => {
-            'always_editable' => true,
-            'group' => 'general',
-            'label' => 'Cgroups',
-            'weight' => 50
-          },
-          "cinder-api"  =>  '{"DeviceAllow" : "/dev/sdb1 r"}'
-        } }
-
-        let(:result) {
-        {
-          "cinder-api"  => { "DeviceAllow" => "/dev/sdb1 r" },
-        }}
-    
-
-        it 'should parse valid hash' do
-          is_expected.to run.with_params(params).and_return(result)
-    end
-  end
-
-
-context "DevicePolicy with valid value" do
-    let(:params) {
-        {
-          'metadata' => {
-            'always_editable' => true,
-            'group' => 'general',
-            'label' => 'Cgroups',
-            'weight' => 50
-          },
-          "cinder-api" => '{"DevicePolicy" : "strict"}'
-        } }
-
-        let(:result) {
-        {
-          "cinder-api"  => { "DevicePolicy" => "strict" },
-        }}
-    
-
-        it 'should parse valid hash' do
-          is_expected.to run.with_params(params).and_return(result)
-    end
-  end
-
-context "DevicePolicy with invalid value" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"DevicePolicy" : "FOO"}'
-        }
+  context 'MemoryLimit with valid value' do
+    let(:params) do
+      {
+        'metadata' => {
+          'always_editable' => true,
+          'group' => 'general',
+          'label' => 'Cgroups',
+          'weight' => 50
+        },
+        'cinder-api' => '{"MemoryLimit" : "1024M"}'
       }
-
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
     end
-  end
 
-
-
-context "Unknown property" do
-
-      let(:params) {
-        {
-          "cinder-api" => '{"UNKNOWN" : "FOO"}'
-        }
+    let(:result) do
+      {
+        'cinder-api' => { 'MemoryLimit' => '1024M' }
       }
+    end
 
-      it  do
-          is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    it 'should parse valid hash' do
+      is_expected.to run.with_params(params).and_return(result)
     end
   end
 
+  context 'MemoryLimit with invalid value' do
+    let(:params) do
+      {
+        'cinder-api' => '{"MemoryLimit":"200FOO"}'
+      }
+    end
 
- end
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    end
+  end
+
+  context 'TasksMax with valid value' do
+    let(:params) do
+      {
+        'metadata' => {
+          'always_editable' => true,
+          'group' => 'general',
+          'label' => 'Cgroups',
+          'weight' => 50
+        },
+        'cinder-api' => '{"TasksMax" : "22"}'
+      }
+    end
+
+    let(:result) do
+      {
+        'cinder-api' => { 'TasksMax' => '22' }
+      }
+    end
+
+    it 'should parse valid hash' do
+      is_expected.to run.with_params(params).and_return(result)
+    end
+  end
+
+  context 'TasksMax with invalid value' do
+    let(:params) do
+      {
+        'cinder-api' => '{"TasksMax":"FOO"}'
+      }
+    end
+
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    end
+  end
+
+  context 'BlockIODeviceWeight with valid value' do
+    let(:params) do
+      {
+        'metadata' => {
+          'always_editable' => true,
+          'group' => 'general',
+          'label' => 'Cgroups',
+          'weight' => 50
+        },
+        'cinder-api' => '{"BlockIODeviceWeight" : "/dev/sda1 10"}'
+      }
+    end
+
+    let(:result) do
+      {
+        'cinder-api' => { 'BlockIODeviceWeight' => '/dev/sda1 10' }
+      }
+    end
+
+    it 'should parse valid hash' do
+      is_expected.to run.with_params(params).and_return(result)
+    end
+  end
+
+  context 'BlockIODeviceWeight with invalid value by syntax' do
+    let(:params) do
+      {
+        'cinder-api' => '{"BlockIODeviceWeight":"foo"}'
+      }
+    end
+
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    end
+  end
+
+  context 'BlockIODeviceWeight with invalid value( > 1k )' do
+    let(:params) do
+      {
+        'cinder-api' => '{"BlockIODeviceWeight":"1000000"}'
+      }
+    end
+
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    end
+  end
+
+  context 'BlockIODeviceWeight with invalid value( < 10 )' do
+    let(:params) do
+      {
+        'cinder-api' => '{"BlockIODeviceWeight":"0"}'
+      }
+    end
+
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    end
+  end
+
+  context 'BlockIOReadBandwidth with valid value' do
+    let(:params) do
+      {
+        'metadata' => {
+          'always_editable' => true,
+          'group' => 'general',
+          'label' => 'Cgroups',
+          'weight' => 50
+        },
+        'cinder-api' => '{"BlockIOReadBandwidth" : "/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0 5M"}'
+      }
+    end
+
+    let(:result) do
+      {
+        'cinder-api' => { 'BlockIOReadBandwidth' => '/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:0:0 5M' }
+      }
+    end
+
+    it 'should parse valid hash' do
+      is_expected.to run.with_params(params).and_return(result)
+    end
+  end
+
+  context 'BlockIOReadBandwidth with invalid value' do
+    let(:params) do
+      {
+        'cinder-api' => '{"CPUAccounting":"foo"}'
+      }
+    end
+
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    end
+  end
+
+  context 'DeviceAllow with valid value' do
+    let(:params) do
+      {
+        'metadata' => {
+          'always_editable' => true,
+          'group' => 'general',
+          'label' => 'Cgroups',
+          'weight' => 50
+        },
+        'cinder-api' => '{"DeviceAllow" : "/dev/sdb1 r"}'
+      }
+    end
+
+    let(:result) do
+      {
+        'cinder-api' => { 'DeviceAllow' => '/dev/sdb1 r' }
+      }
+    end
+
+    it 'should parse valid hash' do
+      is_expected.to run.with_params(params).and_return(result)
+    end
+  end
+
+  context 'DevicePolicy with valid value' do
+    let(:params) do
+      {
+        'metadata' => {
+          'always_editable' => true,
+          'group' => 'general',
+          'label' => 'Cgroups',
+          'weight' => 50
+        },
+        'cinder-api' => '{"DevicePolicy" : "strict"}'
+      }
+    end
+
+    let(:result) do
+      {
+        'cinder-api' => { 'DevicePolicy' => 'strict' }
+      }
+    end
+
+    it 'should parse valid hash' do
+      is_expected.to run.with_params(params).and_return(result)
+    end
+  end
+
+  context 'DevicePolicy with invalid value' do
+    let(:params) do
+      {
+        'cinder-api' => '{"DevicePolicy" : "FOO"}'
+      }
+    end
+
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    end
+  end
+
+  context 'Unknown property' do
+    let(:params) do
+      {
+        'cinder-api' => '{"UNKNOWN" : "FOO"}'
+      }
+    end
+
+    it do
+      is_expected.to run.with_params(params).and_raise_error(RuntimeError)
+    end
+  end
+end
