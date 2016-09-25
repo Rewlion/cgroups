@@ -6,7 +6,7 @@ This puppet module configures Control Groups on the nodes which uses Systemd. Un
 
 
 
-### Initialization
+## Initialization
 
 Place this module at /etc/puppet/modules/cgroups or in the directory where
 your puppet modules are stored.
@@ -23,9 +23,28 @@ class { 'cgroups':
 
 ``` cgroups_set example: { "keystone" => { "CPUShares":"1200", "MemoryLimit":"1G"}  } ```
 
+## Properties
+The next list of properties are supported
+ * CPUAccounting    
+ * MemoryAccounting  
+ * TasksAccounting
+ * BlockIOAccounting
+ * CPUShares
+ * StartupCPUShares
+ * CPUQuota
+ * MemoryLimit
+ * TasksMax
+ * BlockIODeviceWeight   
+ * BlockIOReadBandwidth  
+ * BlockIOWriteBandwidth 
+ * DeviceAllow          
+ * DevicePolicy
+ Slice
+ Delegate
 
 ## Fuel Usage
-This puppet module relies on fuel cluster's settings. Puppet function parse_cgroups_json is used to parse the info from cluster's settings to valid hash format for cgroups class. For example:
+This puppet module relies on fuel cluster's settings. Puppet function parse_cgroups_json is used to parse the info from cluster's settings to valid hash format for cgroups class. 
+##### Example:
 
 ```puppet
   $cgroups_config = hiera('cgroups', {})
@@ -35,9 +54,10 @@ This puppet module relies on fuel cluster's settings. Puppet function parse_cgro
       cgroups_set => $cgroups_set,
     }
 ```
----
+
 For activating cgroup user should add 'cgroup' section into cluster's settings
-file via CLI. Value have to be a JSON type.For example:
+file via CLI. Value have to be a JSON type.
+##### Example:
 ```
   cgroups:
     metadata:
