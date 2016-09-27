@@ -94,7 +94,7 @@ def parse_properties(service, json)
   options
 end
 
-parse_cgroups_json_description = <<-EOS
+parse_cgroups_hiera_description = <<-EOS
     This functions parses an input hash with metadata and cgroups settings(*)
     into a valid hash for cgroups's argument
     (*)cgroups settings have to be in JSON format
@@ -126,13 +126,13 @@ parse_cgroups_json_description = <<-EOS
 EOS
 
 Puppet::Parser::Functions.newfunction(
-  :parse_cgroups_json,
+  :parse_cgroups_hiera,
   type: :rvalue,
-  doc: parse_cgroups_json_description
+  doc: parse_cgroups_hiera_description
 ) do |argv|
 
   unless argv[0].is_a?(Hash)
-    raise(Puppet::ParseError, 'parse_cgroups_json::argument isn`t a Hash type')
+    raise(Puppet::ParseError, 'parse_cgroups_hiera::argument isn`t a Hash type')
   end
 
   settings = argv[0].tap { |el| el.delete('metadata') }

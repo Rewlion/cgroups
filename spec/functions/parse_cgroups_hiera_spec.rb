@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'parse_cgroups_json' do
+describe 'parse_cgroups_hiera' do
   context 'wrong JSON format' do
     let(:params) do
       {

@@ -41,12 +41,12 @@ The next list of properties are supported
  Delegate
 
 ## Fuel Usage
-This puppet module relies on fuel cluster's settings. Puppet function parse_cgroups_json is used to parse the info from cluster's settings to valid hash format for cgroups class. 
+This puppet module relies on fuel cluster's settings. Puppet function parse_cgroups_hiera is used to parse the info from cluster's settings to valid hash format for cgroups class. 
 ##### Example:
 
 ```puppet
   $cgroups_config = hiera('cgroups', {})
-  $cgroups_set = parse_cgroups_json($cgroups_config)
+  $cgroups_set = parse_cgroups_hiera($cgroups_config)
 
     class { '::cgroups':
       cgroups_set => $cgroups_set,
