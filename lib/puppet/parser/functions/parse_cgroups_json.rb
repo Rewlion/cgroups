@@ -2,7 +2,7 @@ require 'json'
 
 # validates input values for service's properties
 class Validator
-  @nop = ->() {}
+  @nop = ->() {true}
 
   @bool_validator = lambda do |str|
     str.to_s == 'true' || str.to_s == 'false'
@@ -66,10 +66,13 @@ class Validator
   }
 
   def self.validate_option(service, property, value)
+    err_by_type = "#{service}::#{property}::#{value} is not a type of[String,Integer]"
     err_by_value = "#{service}::#{property}::#{value} is not valid"
     err_by_unknown = "#{service}::#{property} is not supported"
 
     validator = @validators_by_property_hash[property]
+    
+    raise(err_by_type) unless value.is_a?(String) || value.is_a?(Integer)
     raise(err_by_unknown) if validator.is_a?(NilClass)
     raise(err_by_value) unless validator.call(value)
   end
