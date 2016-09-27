@@ -1,4 +1,4 @@
-class cgroups( $cgroups_set = {} ) {
+class cgroups::RedHat( $cgroups_set = {} ) {
 
     case $::osfamily {
         'redhat': {

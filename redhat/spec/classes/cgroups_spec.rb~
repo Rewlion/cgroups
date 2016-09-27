@@ -1,7 +1,7 @@
 require 'spec_helper'
 # require 'puppet//cgroups.rb'
 
-describe 'cgroups', type: :class do
+describe 'cgroups::redhat', type: :class do
   context 'On RedHat' do
     let (:facts) do
       {
